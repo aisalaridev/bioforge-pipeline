@@ -56,18 +56,18 @@ with open('fasta.txt', 'r', encoding="utf-8") as f:
                 if not i in record:
                     print(f"{i} doesn't have any sequences")  
 
-print(id_saved)
-print(record)
-
 # Working with dna sequence section
 
 class DNA:
 
     def __init__(self, sequence):
-        self.seq = sequence
+        self.__seq = sequence
+
+    def __str__(self):
+        return f"Current sequence: {self.__seq}"
 
     def check_dna_validity(self):
-        for char in self.seq:
+        for char in self.__seq:
             if char in "ATCG":
                 return True
             raise InvalidsequenceError("Invalid DNA sequence")
@@ -75,7 +75,7 @@ class DNA:
     def complement(self):
 
         comp_seq = ''
-        for char in self.seq:
+        for char in self.__seq:
             if char == 'A':
                 comp_seq += 'T'
             elif char == 'T':
@@ -98,7 +98,7 @@ class DNA:
 
         rna_seq = ""
 
-        for char in self.seq:
+        for char in self.__seq:
             if char == 'T':
                 rna_seq += 'U'
             else:
@@ -107,6 +107,6 @@ class DNA:
     
     def gc_content(self):
 
-        g_count = self.seq.count('G')
-        c_count = self.seq.count('C')
-        return round((g_count + c_count) / len(self.seq), 3)
+        g_count = self.__seq.count('G')
+        c_count = self.__seq.count('C')
+        return round((g_count + c_count) / len(self.__seq), 2)
