@@ -7,19 +7,40 @@ from exceptions import FastaFormatError,BioforgeError,DataFileError,Invalidseque
 
 os.makedirs("output", exist_ok=True)
 
+def fasta_is_empty(loc):
+    try:
+        f = open(loc, "r")
+    except FileNotFoundError:
+        raise FileNotFoundError("File not found")
+    try:
+        for line in f:
+            line = line.strip()
+            if ((line.startswith(">") and re.fullmatch(header_pattern, line))
+                or re.fullmatch(sequence_pattern, line)):
+                return "non-empty file"
+        raise FileNotFoundError("No DNA contents in file.")
+    finally:
+        f.close()
+                
+
 logging.basicConfig(filename="output/bioforge.log",level=logging.INFO)
 header_pattern= r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
+sequence_pattern = r"[ACGT]+"
 
 try:
-    with open('fasta.txt', 'r', encoding="utf-8") as f:
-         line = f.readline()
+    f = open('fasta.txt', 'r', encoding="utf-8")
 except:
     logging.error("FileNotFoundError")
     raise FileNotFoundError("File not found!")
 else:
-    if os.path.getsize('fasta.txt') == 0:
-        print("File is empty.")
-    
+    for line in f:
+        if os.path.getsize('fasta.txt') == 0:
+            raise FileNotFoundError("File is empty!")
+finally:
+    f.close()
+
+fasta_is_empty('fasta.txt')
+
 with open('fasta.txt', 'r', encoding="utf-8") as f:
         record={}
         id_saved=[]
