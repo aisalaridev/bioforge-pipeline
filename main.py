@@ -9,10 +9,11 @@ os.makedirs("output", exist_ok=True)
 
 def fasta_is_empty(loc):
     try:
-        f = open(loc, "r")
-    except FileNotFoundError:
-        raise FileNotFoundError("File not found")
-    try:
+        f = open(loc, "r", encoding="utf-8")
+    except:
+        logging.error("FileNotFoundError")
+        raise FileNotFoundError("File not found!")
+    else:
         for line in f:
             line = line.strip()
             if ((line.startswith(">") and re.fullmatch(header_pattern, line))
