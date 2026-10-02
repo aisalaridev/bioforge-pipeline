@@ -91,3 +91,10 @@ INFO:root:processing seq001
 INFO:root:processing seq002
 INFO:root:processing seq001
 INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+ERROR:root:invalid sequence or invalid header
+INFO:root:processing seq001
+INFO:root:processing seq002

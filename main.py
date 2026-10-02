@@ -1,11 +1,15 @@
-#input section solved with help on <team-leader>
-
 import re
 import os
 import logging
 from exceptions import FastaFormatError,BioforgeError,DataFileError,InvalidsequenceError 
 
 os.makedirs("output", exist_ok=True)
+logging.basicConfig(filename="output/bioforge.log",level=logging.INFO)
+
+header_pattern= r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
+sequence_pattern = r"[ACGT]+"
+
+#Check if file has non-DNA related content
 
 def fasta_is_empty(loc):
     try:
@@ -22,12 +26,9 @@ def fasta_is_empty(loc):
         raise FileNotFoundError("No DNA contents in file.")
     finally:
         f.close()
-                
 
-logging.basicConfig(filename="output/bioforge.log",level=logging.INFO)
-header_pattern= r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
-sequence_pattern = r"[ACGT]+"
-
+#Check if file exists, also checking size of file in section else
+#                
 try:
     f = open('fasta.txt', 'r', encoding="utf-8")
 except:
@@ -39,6 +40,8 @@ else:
             raise FileNotFoundError("File is empty!")
 finally:
     f.close()
+
+#Check fasta file status
 
 fasta_is_empty('fasta.txt')
 
