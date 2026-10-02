@@ -1,21 +1,63 @@
-# Reading section : Needs to be implemented correctly
+#input section solved with help on <team-leader>
 
 import re
+import os
+import logging
+from exceptions import FastaFormatError,BioforgeError,DataFileError,InvalidsequenceError 
 
+os.makedirs("output", exist_ok=True)
+
+logging.basicConfig(filename="output/bioforge.log",level=logging.INFO)
 header_pattern= r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
 
-with open('fasta.txt', 'r') as f:
-    for line in f:
+try:
+    with open('fasta.txt', 'r', encoding="utf-8") as f:
+         line = f.readline()
+except:
+    logging.error("FileNotFoundError")
+    raise FileNotFoundError("File not found!")
+else:
+    if os.path.getsize('fasta.txt') == 0:
+        print("File is empty.")
+    
+with open('fasta.txt', 'r', encoding="utf-8") as f:
+        record={}
+        id_saved=[]
+        line = f.readline()
         line = line.strip()
-        if line.startswith('>'):
-            result = re.findall(header_pattern, line)
-            dna_id , description = result[0]
-            #print(f"dna id: {dna_id} || description: {description}")
-        elif re.fullmatch(r"[ACGT]+", line):
-            dna_seq = re.fullmatch(r"[ACGT]+", line)
-            dna_seq = dna_seq.group()
-            #print(dna_seq)
-#------------------------------------------------------------------------------------------------------------------------------------
+        if (line != "") and (not line.startswith(">")):
+            try:
+                raise FastaFormatError("File starts with sequence or corrupt data.")
+            except FastaFormatError as e:
+                logging.error(e) 
+        f.seek(0)
+        for line in f:
+            line = line.strip()
+            if line.startswith(">"):
+                result = re.findall(header_pattern, line)
+                dna_id , description = result[0]
+                logging.info(f"processing {dna_id}")
+                if dna_id in id_saved:
+                    logging.warning(f"Duplicate id for {dna_id}")
+                else:    
+                    id_saved.append(dna_id)
+            elif re.fullmatch(r"[ACGT]+", line.upper()):
+                dna_seq = re.fullmatch(r"[ACGT]+", line.upper())
+                dna_seq = dna_seq.group()
+                record[dna_id]=dna_seq
+            elif line == "":
+                 pass
+            else:
+                try:
+                    raise FastaFormatError("invalid sequence or invalid header")
+                except FastaFormatError as e:
+                    logging.error(e)
+        for i in id_saved:
+                if not i in record:
+                    print(f"{i} doesn't have any sequences")  
+
+print(id_saved)
+print(record)
 
 # Working with dna sequence section
 
@@ -28,7 +70,7 @@ class DNA:
         for char in self.seq:
             if char in "ATCG":
                 return True
-            raise ValueError("Invalid DNA sequence")
+            raise InvalidsequenceError("Invalid DNA sequence")
 
     def complement(self):
 
@@ -43,7 +85,7 @@ class DNA:
             elif char == 'G':
                 comp_seq += 'C'
             else:
-                raise Exception("Sequence is not valid! ")
+                raise InvalidsequenceError("Sequence is not valid! ")
         return comp_seq
 
     def reverse_complement(self):
@@ -68,10 +110,3 @@ class DNA:
         g_count = self.seq.count('G')
         c_count = self.seq.count('C')
         return round((g_count + c_count) / len(self.seq), 3)
-    
-dna = DNA(dna_seq)
-#print(dna_seq)
-#print(dna.complement())
-#print(dna.reverse_complement())
-#print(dna.dna2rna())
-print(dna.gc_content())
