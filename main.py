@@ -68,9 +68,11 @@ class DNA:
 
     def check_dna_validity(self):
         for char in self.__seq:
-            if char in "ATCG":
-                return True
-            raise InvalidsequenceError("Invalid DNA sequence")
+            if not char in "ATCG":
+                raise InvalidsequenceError("Invalid DNA sequence")
+            else: 
+                pass
+        return f"Valid"
 
     def complement(self):
 

@@ -54,3 +54,27 @@ INFO:root:processing seq001
 INFO:root:processing seq002
 INFO:root:processing seq001
 INFO:root:processing seq002
+ERROR:root:File starts with sequence or corrupt data.
+INFO:root:processing seq001
+INFO:root:processing seq002
+ERROR:root:File starts with sequence or corrupt data.
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
+INFO:root:processing seq001
+INFO:root:processing seq002
