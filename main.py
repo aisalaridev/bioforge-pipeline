@@ -94,6 +94,7 @@ class DNA:
     def check_dna_validity(self):
         for char in self.__seq:
             if not char in "ATCG":
+                logging.info(f"Invalid DNA sequence.")
                 raise InvalidsequenceError("Invalid DNA sequence")
             else: 
                 pass
@@ -112,6 +113,7 @@ class DNA:
             elif char == 'G':
                 comp_seq += 'C'
             else:
+                logging.info(f"Unvalid sequence.")
                 raise InvalidsequenceError("Sequence is not valid! ")
         return comp_seq
 
