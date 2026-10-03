@@ -139,3 +139,37 @@ class DNA:
         g_count = self.__seq.count('G')
         c_count = self.__seq.count('C')
         return round((g_count + c_count) / len(self.__seq), 2)
+#checking data files
+
+def check_codon_table(path):
+    with open(path,"r",encoding="utf-8") as f:
+           n=0
+           for line in f:
+                    n+=1
+                    line=line.strip()
+                    if line.startswith("#") or not line:
+                        pass
+                    elif re.fullmatch(r"^[ACGU]{3}\s+[A-Z]$",line):
+                        pass
+                    elif re.fullmatch(r"^[ACGU]{3}\s+[*]$",line): 
+                        pass
+                    else:
+                        logging.error(f"{path}is invalid:DataFileError  because of {line} in line {n} ")
+                        raise DataFileError
+           return f"{path} is valid"
+print(check_codon_table("data/codon_table.txt"))
+def check_amino_weights(path):
+       with open(path,"r",encoding="utf-8") as f:
+            n=0
+            for line in f:
+                n+=1
+                line=line.strip()
+                if line.startswith("#") or not line:
+                    pass
+                elif re.fullmatch(r"^[A-Z]{1}\s+\d+[.]\d+$",line):
+                    pass
+                else:
+                    logging.error(f"{path}is invalid:DataFileError  because of {line} in line {n} ") 
+                    raise DataFileError
+            return f"{path} is valid"
+print(check_amino_weights("data/amino_weights.txt"))
