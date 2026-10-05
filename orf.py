@@ -9,6 +9,7 @@ class ORF:
         self.frame = frame
         self.start_pos = start_pos
         self.protein = protein
+        self.length = protein.length
         self.is_complete = is_complete
         self.orf_id = orf_id
 
@@ -105,7 +106,7 @@ def find_all_orfs(dna):
                 else:
                     pos = total -1 - start
 
-                orfs.append(ORF(strand, frame, pos, protein, f"ORF_complete{counter}"))
+                orfs.append(ORF(strand, frame, pos, protein, complete, f"ORF{counter}"))
                 counter += 1
 
         return orfs
