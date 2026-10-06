@@ -2,14 +2,14 @@ class ORF:
     # Create an ORF object
     def __init__(self, Strand, Frame, Protein, start_pos, is_complete):
                   
-        self.strand = Strand              
-        self.frame = Frame
+        self.Strand = Strand              
+        self.Frame = Frame
         self.Protein = Protein                
         self.start_pos = start_pos        
         self.is_complete = is_complete    
 
     def __str__(self):
-        return f"strand={self.Strand}", f"frame={self.Frame}", f"Protein={self.Protein}", f"start_pos={self.start_pos}", f"is_complete={self.is_complete})"
+        return f"Strand={self.Strand}", f"Frame={self.Frame}", f"Protein={self.Protein}", f"start_pos={self.start_pos}", f"is_complete={self.is_complete})"
         
 def scan_frame(sequence, Frame, Strand):
     orfs = []
@@ -33,7 +33,7 @@ def scan_frame(sequence, Frame, Strand):
 
                 orf_sequence = sequence[orf_start:codon_start + 3]
 
-                orfs.append(ORF(strand=Strand, frame=Frame, start_pos=orf_start, is_complete=True))
+                orfs.append(ORF(Strand=Strand, Frame=Frame, start_pos=orf_start, is_complete=True))
 
                 orf_started = False
                 orf_start = None
@@ -42,16 +42,16 @@ def scan_frame(sequence, Frame, Strand):
 
         orf_sequence = sequence[orf_start:]
 
-        orfs.append(ORF(strand=strand, frame=frame, start_pos=orf_start, is_complete=False))
+        orfs.append(ORF(Strand=Strand, Frame=Frame, start_pos=orf_start, is_complete=False))
 
     return orfs
 #three reading frame
-def find_orfs_in_three_frames(sequence, strand):
+def find_orfs_in_three_frames(sequence, Strand):
     all_orfs = []
 
-    for frame in range(3):
+    for Frame in range(3):
 
-        orfs = scan_frame(sequence, frame, strand)
+        orfs = scan_frame(sequence, Frame, Strand)
 
         all_orfs.extend(orfs)
 
