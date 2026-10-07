@@ -1,98 +1,139 @@
-from dna import DNA
-from exceptions import DataFileError
-
-
-class ProteinSequence:
+class ProteinSequence:    
     def __init__(self, sequence):
         self.sequence = sequence
         self.length = len(sequence)
 
-    def __str__(self):
-        return self.sequence
-
-    def molecular_weight(self, weights):
-        total = 18.015
-        for amino in self.sequence:
-            if amino not in weights:
-                raise DataFileError(f"no weight for amino acid {amino}")
-            total += weights[amino]
-        return round(total, 3)
-
-
 class ORF:
-    def __init__(self, protein, strand, frame, start_pos, is_complete, source_id, organism=None):
-        self.protein = protein
+    def __init__(self, strand, frame, start_pos, protein, is_complete, orf_id):
         self.strand = strand
         self.frame = frame
         self.start_pos = start_pos
+        self.protein = protein
+        self.length = protein.length
         self.is_complete = is_complete
-        self.source_id = source_id
-        self.organism = organism
-        self.motifs = []
-        self.orf_id = None
+        self.orf_id = orf_id
 
-    def status(self):
+    def format_report_entry(self):
         if self.is_complete:
-            return "Complete"
-        return "Incomplete"
+            status = "Complete"
+        else:
+            status = "Incomplete"
+
+        return (
+            f"{self.orf_id}, strand={self.strand}, frame={self.frame}, "
+            f"start={self.start_pos}, protein={self.protein.sequence}, length={self.length}, {status}"
+        )  
+
+stop_codons = ["UGA", "UAA", "UAG"]
+
+bases = "UCAG"
+amino = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
+codon_table = {}
+k = 0
+for a in bases:
+    for b in bases:
+        for c in bases:
+            codon_table[a + b + c] = amino[k]
+            k += 1
+
+def translate(rna, start, end):
+    protein = ""
+    for i in range(start, end, 3):
+        codon = rna[i: i + 3]
+        if codon in stop_codons:
+            break
+        protein = protein + codon_table[codon]
+    return protein
 
 
-class ORFFinder:
-    def __init__(self, codon_table):
-        self.codon_table = codon_table
+#Reverse complement
 
-    def find(self, dna, source_id, organism=None):
-        found = []
-        length = len(dna.get_sequence())
-        forward = dna.dna2rna()
-        reverse = DNA(dna.reverse_complement()).dna2rna()
-        for frame in (0, 1, 2):
-            found.extend(self._scan(forward, frame, "Forward", length, source_id, organism))
-        for frame in (0, 1, 2):
-            found.extend(self._scan(reverse, frame, "Reverse", length, source_id, organism))
-        return found
+def reverse_complement(dna):
+    paris = {"A": "T", "T": "A", "C": "G", "G": "C"}
+    result = ""
+    for base in dna:
+        result = result + paris[base]
+    return result[::-1]    # [::-1] reverses the string
 
-    def _scan(self, rna, frame, strand, dna_length, source_id, organism):
-        found = []
-        index = frame
-        while index + 3 <= len(rna):
-            codon = rna[index:index + 3]
-            if codon != "AUG":
-                index += 3
-                continue
-            protein_text, complete, next_index = self._read(rna, index)
-            if strand == "Reverse":
-                start_pos = dna_length - 1 - index
+# find all ORFs in one RNA string
+
+def find_orfs(rna):
+    result = []
+
+    for frame in range(3):   #three frame; 0, 1, 2
+        start_found = False
+        start_pos = None
+
+        for i in range(frame, len(rna) - 2, 3):
+            codon = rna[i : i + 3]
+
+            if start_found == False:
+                if codon == "AUG":
+                    start_found = True
+                    start_pos = i
+
             else:
-                start_pos = index
-            protein = ProteinSequence(protein_text)
-            found.append(
-                ORF(protein, strand, frame, start_pos, complete, source_id, organism)
-            )
-            if not complete:
-                break
-            index = next_index
-        return found
+                if codon in stop_codons:
+                    result.append((frame, start_pos, i, True))
+                    start_found = False  #look for the next AUG
 
-    def _read(self, rna, start):
-        protein = []
-        pos = start
-        while pos + 3 <= len(rna):
-            codon = rna[pos:pos + 3]
-            if codon in ("UAA", "UAG", "UGA"):
-                return "".join(protein), True, pos + 3
-            if codon not in self.codon_table:
-                raise DataFileError(f"codon {codon} was not found in the codon table")
-            amino = self.codon_table[codon]
-            if amino == "*":
-                return "".join(protein), True, pos + 3
-            protein.append(amino)
-            pos += 3
-        return "".join(protein), False, len(rna)
+       #loop finished but start is still opene -> incomplete ORF
+        if start_found:
+            end = frame + ((len(rna) - frame) // 3) * 3
+            result.append((frame, start_pos, end, False))
+
+    return result
+
+    # take DNA, return a list of ORF objects (both strands)
+
+def find_all_orfs(dna):
+        dna = dna.upper()
+        total = len(dna)
+        orfs = []
+        counter = 1
 
 
-def annotate(orfs):
-    number = 1
-    for orf in orfs:
-        orf.orf_id = f"BFG_{number:03d}"
-        number += 1
+        for strand in ["Forward", "Reverse"]:
+            if strand == "Forward":
+                seq = dna
+            else:
+                seq = reverse_complement(dna) 
+
+            rna = seq.replace("T", "U") 
+
+            for frame, start, end, complete, in find_orfs(rna):
+                protein = ProteinSequence(translate(rna, start, end))
+
+                if strand == "Forward":
+                    pos = start
+                else:
+                    pos = total -1 - start
+
+                orfs.append(ORF(strand, frame, pos, protein, complete, f"BFG_{counter:03d}"))
+                counter += 1
+
+        return orfs
+
+    # test (run only when this file is executed directly)  
+
+if __name__ == "__main__":
+        tests =[
+            ("complete", "GAACTAATGGCTAATAG"),
+            ("incomplete (no stop)", "GAACTAATGGCTAAA"),
+            ("frame 2", "GGATGGCTTAAA"),
+            ("minus strand", "CTATTTAGCCATCATAGC"),
+            ("no AUG", "GAACTAAAAGGC"),
+        ]
+        for title, dna in tests:
+            print("---", title, dna) 
+            orfs = find_all_orfs(dna)
+            if len(orfs) == 0:
+                print("no ORF found")
+            for orf in orfs:
+                print(orf.format_report_entry())  
+
+                                   
+                 
+
+
+
