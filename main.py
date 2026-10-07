@@ -201,7 +201,7 @@ def check_amino_weights(path):
             return f"{path} is valid"
 print(check_amino_weights("data/amino_weights.txt"))
 
-from ORF import find_orfs_in_six_frames
+from orf_frames import find_orfs_in_six_frames
 from orf import find_all_orfs
 
 for dna_id in id_saved:
