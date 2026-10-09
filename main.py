@@ -12,7 +12,6 @@ sequence_pattern = r"[ACGT]+"
 #Check if file has non-DNA related content
 
 def fasta_is_empty(loc):
-    f = None
     try:
         f = open(loc, "r", encoding="utf-8")
     except:
@@ -22,27 +21,25 @@ def fasta_is_empty(loc):
         for line in f:
             line = line.strip()
             if ((line.startswith(">") and re.fullmatch(header_pattern, line))
-                or re.fullmatch(sequence_pattern, line.upper())):
+                or re.fullmatch(sequence_pattern, line)):
                 return "non-empty file"
         raise FileNotFoundError("No DNA contents in file.")
     finally:
-        if f:
-            f.close()
+        f.close()
 
 #Check if file exists, also checking size of file in section else
 #                
-f = None
 try:
     f = open('fasta.txt', 'r', encoding="utf-8")
 except:
     logging.error("FileNotFoundError")
     raise FileNotFoundError("File not found!")
 else:
-    if os.path.getsize('fasta.txt') == 0:
-        raise FileNotFoundError("File is empty!")
+    for line in f:
+        if os.path.getsize('fasta.txt') == 0:
+            raise FileNotFoundError("File is empty!")
 finally:
-    if f:
-        f.close()
+    f.close()
 
 #Check fasta file status
 
@@ -59,65 +56,42 @@ with open('fasta.txt', 'r', encoding="utf-8") as f:
             except FastaFormatError as e:
                 logging.error(e) 
         f.seek(0)
-        dna_id = None
-        fresh = True
-        skip_seq = False
         for line in f:
             line = line.strip()
             if line.startswith(">"):
                 result = re.findall(header_pattern, line)
-                if not result:
-                    logging.error("invalid header")
-                    dna_id = None
-                    skip_seq = True
-                    continue
                 dna_id , description = result[0]
                 logging.info(f"processing {dna_id}")
                 if dna_id in id_saved:
                     logging.warning(f"Duplicate id for {dna_id}")
                 else:    
                     id_saved.append(dna_id)
-                fresh = True
-                skip_seq = False
             elif re.fullmatch(r"[ACGT]+", line.upper()):
-                if skip_seq or dna_id is None:
-                    continue
                 dna_seq = re.fullmatch(r"[ACGT]+", line.upper())
                 dna_seq = dna_seq.group()
-                if fresh or dna_id not in record:
-                    record[dna_id] = dna_seq
-                    fresh = False
-                else:
-                    record[dna_id] += dna_seq
+                record[dna_id]=dna_seq
             elif line == "":
                  pass
             else:
                 try:
-                    raise InvalidsequenceError("invalid sequence or invalid header")
-                except InvalidsequenceError as e:
+                    raise FastaFormatError("invalid sequence or invalid header")
+                except FastaFormatError as e:
                     logging.error(e)
-                skip_seq = True
-                if dna_id in record:
-                    del record[dna_id]
-                fresh = True
         for i in id_saved:
                 if not i in record:
-                    logging.error(f"{i} doesn't have any sequences")  
+                    print(f"{i} doesn't have any sequences")  
 
 # Working with dna sequence section
 
 class DNA:
 
     def __init__(self, sequence):
-        self.__seq = sequence.upper()
+        self.__seq = sequence
 
     def __str__(self):
         return f"Current sequence: {self.__seq}"
 
     def check_dna_validity(self):
-        if self.__seq == "":
-            logging.info(f"Invalid DNA sequence.")
-            raise InvalidsequenceError("Invalid DNA sequence")
         for char in self.__seq:
             if not char in "ATCG":
                 logging.info(f"Invalid DNA sequence.")
@@ -150,7 +124,6 @@ class DNA:
         return rev_seq
 
     def dna2rna(self):
-        self.check_dna_validity()
 
         rna_seq = ""
 
@@ -165,7 +138,7 @@ class DNA:
 
         g_count = self.__seq.count('G')
         c_count = self.__seq.count('C')
-        return round((g_count + c_count) / len(self.__seq) * 100, 2)
+        return round((g_count + c_count) / len(self.__seq), 2)
 #checking data files
 
 def check_codon_table(path):
@@ -182,7 +155,7 @@ def check_codon_table(path):
                         pass
                     else:
                         logging.error(f"{path}is invalid:DataFileError  because of {line} in line {n} ")
-                        raise DataFileError(f"{path} is invalid because of {line} in line {n}")
+                        raise DataFileError
            return f"{path} is valid"
 print(check_codon_table("data/codon_table.txt"))
 def check_amino_weights(path):
@@ -197,23 +170,6 @@ def check_amino_weights(path):
                     pass
                 else:
                     logging.error(f"{path}is invalid:DataFileError  because of {line} in line {n} ") 
-                    raise DataFileError(f"{path} is invalid because of {line} in line {n}")
+                    raise DataFileError
             return f"{path} is valid"
 print(check_amino_weights("data/amino_weights.txt"))
-
-from orf_frames import find_orfs_in_six_frames
-from orf import find_all_orfs
-
-for dna_id in id_saved:
-    if dna_id not in record:
-        continue
-    try:
-        dna = DNA(record[dna_id])
-        print(dna_id, dna.check_dna_validity(), dna.gc_content())
-    except InvalidsequenceError as e:
-        logging.error(e)
-        continue
-    for found in find_orfs_in_six_frames(record[dna_id]):
-        print(dna_id, found)
-    for found in find_all_orfs(record[dna_id]):
-        print(found.format_report_entry())
