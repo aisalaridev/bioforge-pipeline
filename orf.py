@@ -36,11 +36,11 @@ for a in bases:
             codon_table[a + b + c] = amino[k]
             k += 1
 
-    def translate(rna, start, end):
-     protein = ""
-     for i in range(start, end, 3):
+def translate(rna, start, end):
+    protein = ""
+    for i in range(start, end, 3):
         protein = protein + codon_table[rna[i: i + 3]]
-        return protein
+    return protein
 
 
 #Reverse complement
@@ -77,9 +77,9 @@ def find_orfs(rna):
        #loop finished but start is still opene -> incomplete ORF
         if start_found:
             end = frame + ((len(rna) - frame) // 3) * 3
-            result.append((frame, start_pos, end, False))   
+            result.append((frame, start_pos, end, False))
 
-        return result
+    return result
 
     # take DNA, return a list of ORF objects (both strands)
 
